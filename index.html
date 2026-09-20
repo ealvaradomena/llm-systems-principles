@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>LLM Systems Principles</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-e31584831b205ffbb2d98406f31c2a5b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/iconify-3.0.0/iconify-icon.min.js"></script>
+<script id="quarto-search-options" type="application/json">{
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-search-results"></div>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content page-columns page-full column-page" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">LLM Systems Principles</h1>
+<p class="subtitle lead">Human reference and LLM-facing directives</p>
+</div>
+
+
+
+<div class="quarto-title-meta column-page">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="principles-toolbar" aria-label="Table display controls">
+<div class="view-toggle" role="group" aria-label="Visible columns">
+<button type="button" class="view-button is-active" data-view="both">
+Both
+</button>
+<button type="button" class="view-button" data-view="human">
+Human
+</button>
+<button type="button" class="view-button" data-view="llm">
+LLM
+</button>
+</div>
+<button type="button" class="prompt-builder-toggle" id="prompt-builder-toggle" aria-expanded="false" aria-controls="prompt-builder">
+Build prompt
+</button>
+</div>
+<div class="principles-layout page-columns page-full">
+<div id="principles-table" class="principles-table">
+<div class="principles-head" role="row">
+<div class="head-principle">
+Principle
+</div>
+<div class="head-human">
+Human reference
+</div>
+<div class="head-llm">
+LLM directive
+</div>
+</div>
+<section class="principle-row" id="request-batching">
+<div class="principle-label">
+<span class="principle-number">01</span>
+<h2>
+Request Batching
+</h2>
+<button class="select-principle" type="button" data-principle="request-batching" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+Request batching groups multiple processing units into bounded API requests. The goal is to reduce unnecessary API calls without creating requests that are too large, difficult to validate, or harmful to model performance.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Batch as many compatible items as is practical while enforcing limits such as item count, serialized input size, context-window size, expected output size, and validation constraints.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+Instead of sending 20 paragraphs through 20 separate API calls, send the 20 paragraphs together when they fit safely within the request limits and can still be validated individually.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" When multiple compatible processing units require the same inference operation, group them into the largest appropriate bounded requests. Respect model, context-window, serialized-input, expected-output, and validation constraints. Do not increase batch size when doing so would degrade task performance or make individual outputs difficult to validate. " aria-label="Copy Request Batching directive">Copy</button>
+</div>
+<p>
+When multiple compatible processing units require the same inference operation, group them into the largest appropriate bounded requests. Respect model, context-window, serialized-input, expected-output, and validation constraints. Do not increase batch size when doing so would degrade task performance or make individual outputs difficult to validate.
+</p>
+</div>
+</section>
+<section class="principle-row" id="dry-run-execution">
+<div class="principle-label">
+<span class="principle-number">02</span>
+<h2>
+Dry-Run Execution
+</h2>
+<button class="select-principle" type="button" data-principle="dry-run-execution" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+A dry run exercises the pipeline without making consequential API calls. It lets the user inspect what <em>would</em> happen before spending money or creating external side effects.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+A dry run should resolve and display the planned model, processing scope, request count, important parameters, resource estimates, and output destination while preventing live API execution.
+</p>
+<pre><code>DRY RUN
+No API requests will be sent.
+
+
+Model
+  Model:              gpt-5-nano
+  Reasoning effort:   medium
+  Temperature:        unspecified
+
+Scope
+  Stage:              06B
+  Input:              output/stage06a.json
+  Processing units:   746
+  Reusable results:   700
+  New items:          46
+
+Requests
+  Planned requests:   3
+  Batch limit:        20 items
+  Largest batch:      20 items
+
+Estimated resources
+  Input tokens:       ~72,000
+  Output tokens:      ~12,000
+  Total tokens:       ~84,000
+  Incremental cost:   ~$0.18
+
+Output
+  Destination:        output/stage06b/
+  Existing artifacts: preserved
+
+
+DRY RUN COMPLETE
+No API requests were sent.</code></pre>
+<div class="section-label">
+Example
+</div>
+<p>
+Running <code>–dry-run</code> reports that 12 requests would be sent, which model would be used, and the estimated token consumption, but sends no requests.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Provide a dry-run mode for workflows with consequential model execution. Resolve and report the planned model, processing scope, request count, relevant parameters, resource estimates, and output destination without making live API calls or creating consequential external side effects. " aria-label="Copy Dry-Run Execution directive">Copy</button>
+</div>
+<p>
+Provide a dry-run mode for workflows with consequential model execution. Resolve and report the planned model, processing scope, request count, relevant parameters, resource estimates, and output destination without making live API calls or creating consequential external side effects.
+</p>
+</div>
+</section>
+<section class="principle-row" id="preflight-validation-and-cost-estimation">
+<div class="principle-label">
+<span class="principle-number">03</span>
+<h2>
+Preflight Validation and Cost Estimation
+</h2>
+<button class="select-principle" type="button" data-principle="preflight-validation-and-cost-estimation" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+Preflight checks determine whether a planned run is valid and estimate its resource requirements before execution. In resumable pipelines, the estimate should focus on work that still requires new inference.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Before execution, identify new requests, estimate token consumption and incremental monetary cost after accounting for reusable results, and stop the run if configured operational limits would be exceeded.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+A preflight report might say:
+</p>
+<pre><code>PREFLIGHT CHECK
+
+
+Work
+  Processing units:        746
+  Reusable results:        700
+  New items:                46
+  Planned requests:           3
+
+Estimated resources
+  Input tokens:         ~72,000
+  Output tokens:        ~12,000
+  Total tokens:         ~84,000
+  Incremental cost:       ~$0.18
+
+Configured limits
+  Token ceiling:         100,000
+  Spending ceiling:        $1.00
+
+
+PREFLIGHT PASSED
+Execution is within configured limits.</code></pre>
+<p>
+If the run exceeds a configured token or spending ceiling, execution is blocked.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Before consequential execution, validate the fully resolved plan and estimate the resources required for new work. Account for reusable results when calculating planned requests, expected token consumption, and incremental cost. Block execution when configured operational limits would be exceeded. " aria-label="Copy Preflight Validation and Cost Estimation directive">Copy</button>
+</div>
+<p>
+Before consequential execution, validate the fully resolved plan and estimate the resources required for new work. Account for reusable results when calculating planned requests, expected token consumption, and incremental cost. Block execution when configured operational limits would be exceeded.
+</p>
+</div>
+</section>
+<section class="principle-row" id="human-in-the-loop-execution-gate">
+<div class="principle-label">
+<span class="principle-number">04</span>
+<h2>
+Human-in-the-Loop Execution Gate
+</h2>
+<button class="select-principle" type="button" data-principle="human-in-the-loop-execution-gate" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+An execution gate ensures that consequential API calls happen only after explicit human authorization. Safe behavior should be the default.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Live execution must require an affirmative action, and the guard should be enforced at the consequential execution boundary where practical rather than relying only on a user-interface convention.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+A command requires <code>–execute</code> before making API calls. The API-calling function also refuses to run unless it receives an explicit execution authorization.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Require explicit human authorization before consequential API execution. Make non-execution the safe default, and enforce the authorization guard as close as practical to the boundary where the consequential call occurs rather than relying only on a user-interface convention. " aria-label="Copy Human-in-the-Loop Execution Gate directive">Copy</button>
+</div>
+<p>
+Require explicit human authorization before consequential API execution. Make non-execution the safe default, and enforce the authorization guard as close as practical to the boundary where the consequential call occurs rather than relying only on a user-interface convention.
+</p>
+</div>
+</section>
+<section class="principle-row" id="execution-provenance">
+<div class="principle-label">
+<span class="principle-number">05</span>
+<h2>
+Execution Provenance
+</h2>
+<button class="select-principle" type="button" data-principle="execution-provenance" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+Execution provenance preserves enough information to understand, audit, and reconstruct what happened during each LLM invocation. Raw model responses are primary evidence and should not disappear when parsing fails.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Record model identity, relevant parameters, token usage, timestamps, prompt and configuration versions, hashes or fingerprints, and request/response artifacts. Preserve the authoritative raw model response before lossy parsing, normalization, or transformation.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+For each call, save the raw response first and then the parsed result, together with the model snapshot, prompt hash, timestamp, token usage, and request ID.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Persist sufficient provenance to audit and reconstruct each LLM invocation. Record execution-critical inputs and metadata, including model identity, relevant parameters, prompt and configuration versions, timestamps, token usage when available, and stable fingerprints. Preserve the authoritative raw model response before lossy parsing, normalization, or downstream transformation. " aria-label="Copy Execution Provenance directive">Copy</button>
+</div>
+<p>
+Persist sufficient provenance to audit and reconstruct each LLM invocation. Record execution-critical inputs and metadata, including model identity, relevant parameters, prompt and configuration versions, timestamps, token usage when available, and stable fingerprints. Preserve the authoritative raw model response before lossy parsing, normalization, or downstream transformation.
+</p>
+</div>
+</section>
+<section class="principle-row" id="programmatic-output-validation">
+<div class="principle-label">
+<span class="principle-number">06</span>
+<h2>
+Programmatic Output Validation
+</h2>
+<button class="select-principle" type="button" data-principle="programmatic-output-validation" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+LLM output should not be trusted merely because it looks plausible or satisfies a generation-time schema. Independent code should verify the properties that downstream processing depends on.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Use generation-time constraints when useful, but independently enforce structural schemas, allowed values, logical consistency, and source-grounded invariants before accepting an output.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+If the model returns a quotation as supporting evidence, code verifies that the quotation is an exact substring of the source paragraph. If it is not, the output is rejected or flagged.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Treat model output as untrusted until it passes independent machine-enforceable validation. Use generation-time constraints where useful, but separately enforce required schemas, allowed values, logical consistency, and source-grounded invariants before downstream acceptance. Reject or explicitly quarantine outputs that fail validation. " aria-label="Copy Programmatic Output Validation directive">Copy</button>
+</div>
+<p>
+Treat model output as untrusted until it passes independent machine-enforceable validation. Use generation-time constraints where useful, but separately enforce required schemas, allowed values, logical consistency, and source-grounded invariants before downstream acceptance. Reject or explicitly quarantine outputs that fail validation.
+</p>
+</div>
+</section>
+<section class="principle-row" id="deterministic-stochastic-separation">
+<div class="principle-label">
+<span class="principle-number">07</span>
+<h2>
+Deterministic–Stochastic Separation
+</h2>
+<button class="select-principle" type="button" data-principle="deterministic-stochastic-separation" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+LLMs are useful for tasks requiring semantic judgment, but many pipeline operations are better handled by ordinary code. Separating these responsibilities improves reproducibility, cost control, and auditability.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Use LLM inference where model judgment is genuinely needed. Perform deterministic transformations, identifiers, calculations, joins, filtering, and other mechanically reproducible operations programmatically.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+Ask the LLM to identify governance relationships in text. Use R or Python, not another LLM call, to count those relationships and join them to metadata.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Use LLM inference only for work that genuinely requires semantic or probabilistic judgment. Perform deterministic transformations, identifiers, calculations, joins, filtering, counting, and other mechanically reproducible operations in ordinary code. " aria-label="Copy Deterministic–Stochastic Separation directive">Copy</button>
+</div>
+<p>
+Use LLM inference only for work that genuinely requires semantic or probabilistic judgment. Perform deterministic transformations, identifiers, calculations, joins, filtering, counting, and other mechanically reproducible operations in ordinary code.
+</p>
+</div>
+</section>
+<section class="principle-row" id="stagewise-task-decomposition">
+<div class="principle-label">
+<span class="principle-number">08</span>
+<h2>
+Stagewise Task Decomposition
+</h2>
+<button class="select-principle" type="button" data-principle="stagewise-task-decomposition" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+Complex LLM tasks are easier to control when divided into bounded stages. Each stage should have one clear analytical responsibility and an explicit intermediate representation.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Give each stage a well-defined input, task, and structured output. Avoid asking one model call to solve several separable analytical problems simultaneously.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+Stage 06A identifies proposition spans. Stage 06B receives only the admitted propositions and structures them. The second stage does not independently decide whether a proposition exists.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Decompose complex LLM work into bounded stages with distinct analytical responsibilities. Give each stage a well-defined input, task, and explicit intermediate representation, and pass structured outputs forward. Do not ask one model call to solve separable analytical problems when they can be staged clearly. " aria-label="Copy Stagewise Task Decomposition directive">Copy</button>
+</div>
+<p>
+Decompose complex LLM work into bounded stages with distinct analytical responsibilities. Give each stage a well-defined input, task, and explicit intermediate representation, and pass structured outputs forward. Do not ask one model call to solve separable analytical problems when they can be staged clearly.
+</p>
+</div>
+</section>
+<section class="principle-row" id="checkpointing">
+<div class="principle-label">
+<span class="principle-number">09</span>
+<h2>
+Checkpointing
+</h2>
+<button class="select-principle" type="button" data-principle="checkpointing" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+Checkpointing saves completed work incrementally instead of waiting until the entire pipeline finishes. A late failure therefore does not erase earlier successful work.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Persist validated outputs durably at meaningful processing-unit boundaries as soon as those units are completed.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+After processing and validating each document, save its result before starting the next document.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Persist validated work incrementally at meaningful processing-unit boundaries. Do not defer all durable writes until the full routine completes when completed units can be safely preserved earlier. " aria-label="Copy Checkpointing directive">Copy</button>
+</div>
+<p>
+Persist validated work incrementally at meaningful processing-unit boundaries. Do not defer all durable writes until the full routine completes when completed units can be safely preserved earlier.
+</p>
+</div>
+</section>
+<section class="principle-row" id="resumable-execution">
+<div class="principle-label">
+<span class="principle-number">10</span>
+<h2>
+Resumable Execution
+</h2>
+<button class="select-principle" type="button" data-principle="resumable-execution" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+A resumable pipeline can continue after interruption without repeating successful model calls whose persisted results are still valid.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Detect valid completed work and reuse it. When possible, reconstruct or finalize downstream state locally instead of paying for the same inference again.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+If processing fails on document 47 after documents 1-46 were saved successfully, the next run begins with document 47 rather than document 1.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Design interrupted workflows to continue from valid persisted work without repeating successful inference unnecessarily. Detect completed units whose results remain valid and reuse them; reconstruct or finalize downstream state locally when new inference is not required. " aria-label="Copy Resumable Execution directive">Copy</button>
+</div>
+<p>
+Design interrupted workflows to continue from valid persisted work without repeating successful inference unnecessarily. Detect completed units whose results remain valid and reuse them; reconstruct or finalize downstream state locally when new inference is not required.
+</p>
+</div>
+</section>
+<section class="principle-row" id="dependency-aware-incremental-processing">
+<div class="principle-label">
+<span class="principle-number">11</span>
+<h2>
+Dependency-Aware Incremental Processing
+</h2>
+<button class="select-principle" type="button" data-principle="dependency-aware-incremental-processing" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+The existence of an old output does not prove that it is still valid. Incremental processing determines reuse from the dependencies that produced the result.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Track relevant inputs such as source content, prompts, configuration, model choices, schemas, and upstream artifacts. Recompute only outputs whose dependencies changed.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+If a prompt changes, rerun the outputs that depended on that prompt while reusing unaffected outputs.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Determine whether prior results remain reusable from the dependencies that produced them, not merely from the existence of output files. Track relevant source inputs, prompts, configuration, model choices, schemas, and upstream artifacts, and recompute only outputs affected by changed dependencies. " aria-label="Copy Dependency-Aware Incremental Processing directive">Copy</button>
+</div>
+<p>
+Determine whether prior results remain reusable from the dependencies that produced them, not merely from the existence of output files. Track relevant source inputs, prompts, configuration, model choices, schemas, and upstream artifacts, and recompute only outputs affected by changed dependencies.
+</p>
+</div>
+</section>
+<section class="principle-row" id="atomic-persistence">
+<div class="principle-label">
+<span class="principle-number">12</span>
+<h2>
+Atomic Persistence
+</h2>
+<button class="select-principle" type="button" data-principle="atomic-persistence" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+Atomic persistence prevents interrupted writes from leaving partial files that appear to be completed outputs.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Do not mark a processing unit complete until its full validated result has been durably written. Use write patterns that prevent incomplete state from becoming authoritative.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+Write a result to a temporary file first. After the write succeeds, atomically rename it to the final filename.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Prevent partial or interrupted writes from appearing authoritative. Do not mark a processing unit complete until its full validated output has been durably persisted. Use an appropriate atomic or transactional write strategy for the storage system in use. " aria-label="Copy Atomic Persistence directive">Copy</button>
+</div>
+<p>
+Prevent partial or interrupted writes from appearing authoritative. Do not mark a processing unit complete until its full validated output has been durably persisted. Use an appropriate atomic or transactional write strategy for the storage system in use.
+</p>
+</div>
+</section>
+<section class="principle-row" id="artifact-immutability">
+<div class="principle-label">
+<span class="principle-number">13</span>
+<h2>
+Artifact Immutability
+</h2>
+<button class="select-principle" type="button" data-principle="artifact-immutability" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+Completed or archival artifacts should remain trustworthy evidence of earlier runs. Later executions should not silently modify or replace them.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Protect authoritative artifacts from overwrite and write new executions to distinct destinations when prior results must be preserved.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+Keep validated 2024 outputs frozen and write a new model run to a separate timestamped directory.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Protect completed or archival artifacts that serve as authoritative evidence of prior runs. Do not silently overwrite them. When preservation is required, write subsequent executions to distinct destinations or versions. " aria-label="Copy Artifact Immutability directive">Copy</button>
+</div>
+<p>
+Protect completed or archival artifacts that serve as authoritative evidence of prior runs. Do not silently overwrite them. When preservation is required, write subsequent executions to distinct destinations or versions.
+</p>
+</div>
+</section>
+<section class="principle-row" id="failure-observability">
+<div class="principle-label">
+<span class="principle-number">14</span>
+<h2>
+Failure Observability
+</h2>
+<button class="select-principle" type="button" data-principle="failure-observability" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+When a pipeline fails, the user should immediately understand where it stopped and what the failure means for already completed work.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Report the failed processing unit, what work remains valid and preserved, and where a resumed execution should continue.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+Report:
+</p>
+<pre><code>PIPELINE FAILED
+
+
+Failure
+  Stage:              Document processing
+  Processing unit:    Document 47 of 100
+  Error:              Invalid model response
+
+Preserved work
+  Completed units:    Documents 1–46
+  Outputs preserved:  Yes
+  Reprocessing needed: No
+
+Recovery
+  Resume at:          Document 47
+  Previous results:   Will be reused
+
+
+EXECUTION STOPPED
+Documents 1–46 remain valid.
+Restart will resume at document 47.</code></pre>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" When processing fails, report enough state for the user or calling system to understand the failure and recover correctly. Identify where execution stopped, what completed work remains valid and preserved, what must be reprocessed, and the correct recovery or resume point. " aria-label="Copy Failure Observability directive">Copy</button>
+</div>
+<p>
+When processing fails, report enough state for the user or calling system to understand the failure and recover correctly. Identify where execution stopped, what completed work remains valid and preserved, what must be reprocessed, and the correct recovery or resume point.
+</p>
+</div>
+</section>
+<section class="principle-row" id="completion-reporting">
+<div class="principle-label">
+<span class="principle-number">15</span>
+<h2>
+Completion Reporting
+</h2>
+<button class="select-principle" type="button" data-principle="completion-reporting" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+Regardless of whether a script involves LLMs, successful termination should be explicit. A script should not leave the user guessing whether it finished or where its outputs went.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+At successful termination, report completion and identify any externally visible files or other artifacts that were created, updated, or otherwise produced.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+Report:
+</p>
+<pre><code>PROCESSING COMPLETE
+
+
+Outputs
+  Created:            outputs/results.csv
+
+
+COMPLETED SUCCESSFULLY
+1 output artifact was written.</code></pre>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" At successful termination, explicitly report completion and identify externally visible files or other artifacts that were created, updated, or otherwise produced. Do not leave successful completion or output locations implicit. " aria-label="Copy Completion Reporting directive">Copy</button>
+</div>
+<p>
+At successful termination, explicitly report completion and identify externally visible files or other artifacts that were created, updated, or otherwise produced. Do not leave successful completion or output locations implicit.
+</p>
+</div>
+</section>
+</div>
+<aside class="prompt-builder" id="prompt-builder" aria-label="LLM directive selection">
+<div class="prompt-builder-heading">
+<div>
+<div class="prompt-builder-eyebrow">
+Build your prompt
+</div>
+<h2>
+Select principles
+</h2>
+</div>
+<div id="selection-count" class="selection-count" aria-live="polite">
+
+</div>
+</div>
+<div class="prompt-builder-actions">
+<button type="button" id="select-all">
+Select all
+</button>
+<button type="button" id="clear-selection">
+Clear
+</button>
+</div>
+<div class="principle-checklist">
+<div class="principle-choice" data-principle="request-batching">
+<input class="principle-select" type="checkbox" value="request-batching" aria-label="Include Request Batching"><span class="choice-number">01</span><a class="principle-jump" href="#request-batching">Request Batching</a>
+</div>
+<div class="principle-choice" data-principle="dry-run-execution">
+<input class="principle-select" type="checkbox" value="dry-run-execution" aria-label="Include Dry-Run Execution"><span class="choice-number">02</span><a class="principle-jump" href="#dry-run-execution">Dry-Run Execution</a>
+</div>
+<div class="principle-choice" data-principle="preflight-validation-and-cost-estimation">
+<input class="principle-select" type="checkbox" value="preflight-validation-and-cost-estimation" aria-label="Include Preflight Validation and Cost Estimation"><span class="choice-number">03</span><a class="principle-jump" href="#preflight-validation-and-cost-estimation">Preflight Validation and Cost Estimation</a>
+</div>
+<div class="principle-choice" data-principle="human-in-the-loop-execution-gate">
+<input class="principle-select" type="checkbox" value="human-in-the-loop-execution-gate" aria-label="Include Human-in-the-Loop Execution Gate"><span class="choice-number">04</span><a class="principle-jump" href="#human-in-the-loop-execution-gate">Human-in-the-Loop Execution Gate</a>
+</div>
+<div class="principle-choice" data-principle="execution-provenance">
+<input class="principle-select" type="checkbox" value="execution-provenance" aria-label="Include Execution Provenance"><span class="choice-number">05</span><a class="principle-jump" href="#execution-provenance">Execution Provenance</a>
+</div>
+<div class="principle-choice" data-principle="programmatic-output-validation">
+<input class="principle-select" type="checkbox" value="programmatic-output-validation" aria-label="Include Programmatic Output Validation"><span class="choice-number">06</span><a class="principle-jump" href="#programmatic-output-validation">Programmatic Output Validation</a>
+</div>
+<div class="principle-choice" data-principle="deterministic-stochastic-separation">
+<input class="principle-select" type="checkbox" value="deterministic-stochastic-separation" aria-label="Include Deterministic–Stochastic Separation"><span class="choice-number">07</span><a class="principle-jump" href="#deterministic-stochastic-separation">Deterministic–Stochastic Separation</a>
+</div>
+<div class="principle-choice" data-principle="stagewise-task-decomposition">
+<input class="principle-select" type="checkbox" value="stagewise-task-decomposition" aria-label="Include Stagewise Task Decomposition"><span class="choice-number">08</span><a class="principle-jump" href="#stagewise-task-decomposition">Stagewise Task Decomposition</a>
+</div>
+<div class="principle-choice" data-principle="checkpointing">
+<input class="principle-select" type="checkbox" value="checkpointing" aria-label="Include Checkpointing"><span class="choice-number">09</span><a class="principle-jump" href="#checkpointing">Checkpointing</a>
+</div>
+<div class="principle-choice" data-principle="resumable-execution">
+<input class="principle-select" type="checkbox" value="resumable-execution" aria-label="Include Resumable Execution"><span class="choice-number">10</span><a class="principle-jump" href="#resumable-execution">Resumable Execution</a>
+</div>
+<div class="principle-choice" data-principle="dependency-aware-incremental-processing">
+<input class="principle-select" type="checkbox" value="dependency-aware-incremental-processing" aria-label="Include Dependency-Aware Incremental Processing"><span class="choice-number">11</span><a class="principle-jump" href="#dependency-aware-incremental-processing">Dependency-Aware Incremental Processing</a>
+</div>
+<div class="principle-choice" data-principle="atomic-persistence">
+<input class="principle-select" type="checkbox" value="atomic-persistence" aria-label="Include Atomic Persistence"><span class="choice-number">12</span><a class="principle-jump" href="#atomic-persistence">Atomic Persistence</a>
+</div>
+<div class="principle-choice" data-principle="artifact-immutability">
+<input class="principle-select" type="checkbox" value="artifact-immutability" aria-label="Include Artifact Immutability"><span class="choice-number">13</span><a class="principle-jump" href="#artifact-immutability">Artifact Immutability</a>
+</div>
+<div class="principle-choice" data-principle="failure-observability">
+<input class="principle-select" type="checkbox" value="failure-observability" aria-label="Include Failure Observability"><span class="choice-number">14</span><a class="principle-jump" href="#failure-observability">Failure Observability</a>
+</div>
+<div class="principle-choice" data-principle="completion-reporting">
+<input class="principle-select" type="checkbox" value="completion-reporting" aria-label="Include Completion Reporting"><span class="choice-number">15</span><a class="principle-jump" href="#completion-reporting">Completion Reporting</a>
+</div>
+</div>
+<button type="button" class="copy-selected" id="copy-selected" disabled="">
+Copy selected directives
+</button>
+</aside>
+</div>
+<script src="assets/table.js"></script>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© <span data-current-year="">2026</span> Edwin Alvarado-Mena, PhD</p>
+</div>   
+    <div class="nav-footer-center">
+<p><a href="https://alvaradocss.com/">AlvaradoCSS.com</a> <span class="footer-link-separator"></span> <a href="https://policydatascience.com/">PolicyDataScience.com</a></p>
+</div>
+    <div class="nav-footer-right">
+<p>Built with <iconify-icon role="img" inline="" icon="simple-icons:quarto" style="margin:0 .14rem 0 .08rem;vertical-align:-.12rem;;font-size: 0.875em;" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto and <iconify-icon role="img" inline="" icon="fa6-brands:r-project" style="margin:0 .14rem 0 .08rem;vertical-align:-.12rem;;font-size: 0.875em;" aria-label="Icon r-project from fa6-brands Iconify.design set." title="Icon r-project from fa6-brands Iconify.design set."></iconify-icon> R</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
