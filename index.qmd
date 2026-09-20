@@ -1,0 +1,16 @@
+---
+title: "LLM Systems Principles"
+subtitle: "Human reference and LLM-facing directives"
+engine: knitr
+---
+
+```{r}
+#| output: asis
+source("R/render-principles.R", local = TRUE)
+render_principles_table(
+  human_path = "principles/human-reference.qmd",
+  llm_path = "principles/llm-directives.qmd"
+)
+```
+
+<script src="assets/table.js"></script>

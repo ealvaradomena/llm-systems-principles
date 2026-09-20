@@ -1,0 +1,25 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "LLM Systems Principles"
+  search: false
+  navbar: false
+  page-footer:
+    left: "© <span data-current-year>2026</span> Edwin Alvarado-Mena, PhD"
+    center: "[AlvaradoCSS.com](https://alvaradocss.com/) <span class=\"footer-link-separator\"></span> [PolicyDataScience.com](https://policydatascience.com/)"
+    right: "Built with {{< iconify simple-icons:quarto size=sm label=\"\" style=\"margin:0 .14rem 0 .08rem;vertical-align:-.12rem;\" >}} Quarto and {{< iconify fa6-brands:r-project size=sm label=\"\" style=\"margin:0 .14rem 0 .08rem;vertical-align:-.12rem;\" >}} R"
+
+format:
+  html:
+    theme: cosmo
+    css: assets/styles.css
+    toc: false
+    page-layout: full
+    anchor-sections: false
+
+execute:
+  echo: false
+  warning: false
+  message: false

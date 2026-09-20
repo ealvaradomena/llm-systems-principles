@@ -1,0 +1,65 @@
+---
+title: "LLM Systems Principles: Directives"
+format: gfm
+editor: source
+---
+
+# Request Batching
+
+When multiple compatible processing units require the same inference operation, group them into the largest appropriate bounded requests. Respect model, context-window, serialized-input, expected-output, and validation constraints. Do not increase batch size when doing so would degrade task performance or make individual outputs difficult to validate.
+
+# Dry-Run Execution
+
+Provide a dry-run mode for workflows with consequential model execution. Resolve and report the planned model, processing scope, request count, relevant parameters, resource estimates, and output destination without making live API calls or creating consequential external side effects.
+
+# Preflight Validation and Cost Estimation
+
+Before consequential execution, validate the fully resolved plan and estimate the resources required for new work. Account for reusable results when calculating planned requests, expected token consumption, and incremental cost. Block execution when configured operational limits would be exceeded.
+
+# Human-in-the-Loop Execution Gate
+
+Require explicit human authorization before consequential API execution. Make non-execution the safe default, and enforce the authorization guard as close as practical to the boundary where the consequential call occurs rather than relying only on a user-interface convention.
+
+# Execution Provenance
+
+Persist sufficient provenance to audit and reconstruct each LLM invocation. Record execution-critical inputs and metadata, including model identity, relevant parameters, prompt and configuration versions, timestamps, token usage when available, and stable fingerprints. Preserve the authoritative raw model response before lossy parsing, normalization, or downstream transformation.
+
+# Programmatic Output Validation
+
+Treat model output as untrusted until it passes independent machine-enforceable validation. Use generation-time constraints where useful, but separately enforce required schemas, allowed values, logical consistency, and source-grounded invariants before downstream acceptance. Reject or explicitly quarantine outputs that fail validation.
+
+# Deterministic–Stochastic Separation
+
+Use LLM inference only for work that genuinely requires semantic or probabilistic judgment. Perform deterministic transformations, identifiers, calculations, joins, filtering, counting, and other mechanically reproducible operations in ordinary code.
+
+# Stagewise Task Decomposition
+
+Decompose complex LLM work into bounded stages with distinct analytical responsibilities. Give each stage a well-defined input, task, and explicit intermediate representation, and pass structured outputs forward. Do not ask one model call to solve separable analytical problems when they can be staged clearly.
+
+# Checkpointing
+
+Persist validated work incrementally at meaningful processing-unit boundaries. Do not defer all durable writes until the full routine completes when completed units can be safely preserved earlier.
+
+# Resumable Execution
+
+Design interrupted workflows to continue from valid persisted work without repeating successful inference unnecessarily. Detect completed units whose results remain valid and reuse them; reconstruct or finalize downstream state locally when new inference is not required.
+
+# Dependency-Aware Incremental Processing
+
+Determine whether prior results remain reusable from the dependencies that produced them, not merely from the existence of output files. Track relevant source inputs, prompts, configuration, model choices, schemas, and upstream artifacts, and recompute only outputs affected by changed dependencies.
+
+# Atomic Persistence
+
+Prevent partial or interrupted writes from appearing authoritative. Do not mark a processing unit complete until its full validated output has been durably persisted. Use an appropriate atomic or transactional write strategy for the storage system in use.
+
+# Artifact Immutability
+
+Protect completed or archival artifacts that serve as authoritative evidence of prior runs. Do not silently overwrite them. When preservation is required, write subsequent executions to distinct destinations or versions.
+
+# Failure Observability
+
+When processing fails, report enough state for the user or calling system to understand the failure and recover correctly. Identify where execution stopped, what completed work remains valid and preserved, what must be reprocessed, and the correct recovery or resume point.
+
+# Completion Reporting
+
+At successful termination, explicitly report completion and identify externally visible files or other artifacts that were created, updated, or otherwise produced. Do not leave successful completion or output locations implicit.

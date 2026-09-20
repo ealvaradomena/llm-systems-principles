@@ -1,0 +1,339 @@
+---
+title: Principles for Reliable, Auditable, and Cost-Aware LLM Pipelines
+editor: source
+format:
+  pdf:
+    number-sections: true
+    toc: true
+    toc-depth: 2
+---
+
+LLM pipelines become more reliable when model calls are incorporated into a larger software system. Here's a summary of the principles I usually follow when creating a programming routine involving generative AI.
+
+The following principles emphasize managing costs, maintaining evidence, validating results, recovering from errors, and separating the unpredictable nature of models from deterministic processes. These safeguards help ensure high-quality work assisted by LLMs.
+
+# Request Batching
+
+## Description
+
+Request batching groups multiple processing units into bounded API requests. The goal is to reduce unnecessary API calls without creating requests that are too large, difficult to validate, or harmful to model performance.
+
+## Requirements
+
+Batch as many compatible items as is practical while enforcing limits such as item count, serialized input size, context-window size, expected output size, and validation constraints.
+
+## Example
+
+Instead of sending 20 paragraphs through 20 separate API calls, send the 20 paragraphs together when they fit safely within the request limits and can still be validated individually.
+
+# Dry-Run Execution
+
+## Description
+
+A dry run exercises the pipeline without making consequential API calls. It lets the user inspect what *would* happen before spending money or creating external side effects.
+
+## Requirements
+
+A dry run should resolve and display the planned model, processing scope, request count, important parameters, resource estimates, and output destination while preventing live API execution.
+
+``` text
+---
+
+DRY RUN
+No API requests will be sent.
+
+
+Model
+  Model:              gpt-5-nano
+  Reasoning effort:   medium
+  Temperature:        unspecified
+
+Scope
+  Stage:              06B
+  Input:              output/stage06a.json
+  Processing units:   746
+  Reusable results:   700
+  New items:          46
+
+Requests
+  Planned requests:   3
+  Batch limit:        20 items
+  Largest batch:      20 items
+
+Estimated resources
+  Input tokens:       ~72,000
+  Output tokens:      ~12,000
+  Total tokens:       ~84,000
+  Incremental cost:   ~$0.18
+
+Output
+  Destination:        output/stage06b/
+  Existing artifacts: preserved
+
+
+DRY RUN COMPLETE
+No API requests were sent.
+
+---
+```
+
+## Example
+
+Running `--dry-run` reports that 12 requests would be sent, which model would be used, and the estimated token consumption, but sends no requests.
+
+# Preflight Validation and Cost Estimation
+
+## Description
+
+Preflight checks determine whether a planned run is valid and estimate its resource requirements before execution. In resumable pipelines, the estimate should focus on work that still requires new inference.
+
+## Requirements
+
+Before execution, identify new requests, estimate token consumption and incremental monetary cost after accounting for reusable results, and stop the run if configured operational limits would be exceeded.
+
+## Example
+
+A preflight report might say:
+
+``` text
+---
+
+PREFLIGHT CHECK
+
+
+Work
+  Processing units:        746
+  Reusable results:        700
+  New items:                46
+  Planned requests:           3
+
+Estimated resources
+  Input tokens:         ~72,000
+  Output tokens:        ~12,000
+  Total tokens:         ~84,000
+  Incremental cost:       ~$0.18
+
+Configured limits
+  Token ceiling:         100,000
+  Spending ceiling:        $1.00
+
+
+PREFLIGHT PASSED
+Execution is within configured limits.
+
+---
+```
+
+If the run exceeds a configured token or spending ceiling, execution is blocked.
+
+# Human-in-the-Loop Execution Gate
+
+## Description
+
+An execution gate ensures that consequential API calls happen only after explicit human authorization. Safe behavior should be the default.
+
+## Requirements
+
+Live execution must require an affirmative action, and the guard should be enforced at the consequential execution boundary where practical rather than relying only on a user-interface convention.
+
+## Example
+
+A command requires `--execute` before making API calls. The API-calling function also refuses to run unless it receives an explicit execution authorization.
+
+# Execution Provenance
+
+## Description
+
+Execution provenance preserves enough information to understand, audit, and reconstruct what happened during each LLM invocation. Raw model responses are primary evidence and should not disappear when parsing fails.
+
+## Requirements
+
+Record model identity, relevant parameters, token usage, timestamps, prompt and configuration versions, hashes or fingerprints, and request/response artifacts. Preserve the authoritative raw model response before lossy parsing, normalization, or transformation.
+
+## Example
+
+For each call, save the raw response first and then the parsed result, together with the model snapshot, prompt hash, timestamp, token usage, and request ID.
+
+# Programmatic Output Validation
+
+## Description
+
+LLM output should not be trusted merely because it looks plausible or satisfies a generation-time schema. Independent code should verify the properties that downstream processing depends on.
+
+## Requirements
+
+Use generation-time constraints when useful, but independently enforce structural schemas, allowed values, logical consistency, and source-grounded invariants before accepting an output.
+
+## Example
+
+If the model returns a quotation as supporting evidence, code verifies that the quotation is an exact substring of the source paragraph. If it is not, the output is rejected or flagged.
+
+# Deterministic–Stochastic Separation
+
+## Description
+
+LLMs are useful for tasks requiring semantic judgment, but many pipeline operations are better handled by ordinary code. Separating these responsibilities improves reproducibility, cost control, and auditability.
+
+## Requirements
+
+Use LLM inference where model judgment is genuinely needed. Perform deterministic transformations, identifiers, calculations, joins, filtering, and other mechanically reproducible operations programmatically.
+
+## Example
+
+Ask the LLM to identify governance relationships in text. Use R or Python, not another LLM call, to count those relationships and join them to metadata.
+
+# Stagewise Task Decomposition
+
+## Description
+
+Complex LLM tasks are easier to control when divided into bounded stages. Each stage should have one clear analytical responsibility and an explicit intermediate representation.
+
+## Requirements
+
+Give each stage a well-defined input, task, and structured output. Avoid asking one model call to solve several separable analytical problems simultaneously.
+
+## Example
+
+Stage 06A identifies proposition spans. Stage 06B receives only the admitted propositions and structures them. The second stage does not independently decide whether a proposition exists.
+
+# Checkpointing
+
+## Description
+
+Checkpointing saves completed work incrementally instead of waiting until the entire pipeline finishes. A late failure therefore does not erase earlier successful work.
+
+## Requirements
+
+Persist validated outputs durably at meaningful processing-unit boundaries as soon as those units are completed.
+
+## Example
+
+After processing and validating each document, save its result before starting the next document.
+
+# Resumable Execution
+
+## Description
+
+A resumable pipeline can continue after interruption without repeating successful model calls whose persisted results are still valid.
+
+## Requirements
+
+Detect valid completed work and reuse it. When possible, reconstruct or finalize downstream state locally instead of paying for the same inference again.
+
+## Example
+
+If processing fails on document 47 after documents 1-46 were saved successfully, the next run begins with document 47 rather than document 1.
+
+# Dependency-Aware Incremental Processing
+
+## Description
+
+The existence of an old output does not prove that it is still valid. Incremental processing determines reuse from the dependencies that produced the result.
+
+## Requirements
+
+Track relevant inputs such as source content, prompts, configuration, model choices, schemas, and upstream artifacts. Recompute only outputs whose dependencies changed.
+
+## Example
+
+If a prompt changes, rerun the outputs that depended on that prompt while reusing unaffected outputs.
+
+# Atomic Persistence
+
+## Description
+
+Atomic persistence prevents interrupted writes from leaving partial files that appear to be completed outputs.
+
+## Requirements
+
+Do not mark a processing unit complete until its full validated result has been durably written. Use write patterns that prevent incomplete state from becoming authoritative.
+
+## Example
+
+Write a result to a temporary file first. After the write succeeds, atomically rename it to the final filename.
+
+# Artifact Immutability
+
+## Description
+
+Completed or archival artifacts should remain trustworthy evidence of earlier runs. Later executions should not silently modify or replace them.
+
+## Requirements
+
+Protect authoritative artifacts from overwrite and write new executions to distinct destinations when prior results must be preserved.
+
+## Example
+
+Keep validated 2024 outputs frozen and write a new model run to a separate timestamped directory.
+
+# Failure Observability
+
+## Description
+
+When a pipeline fails, the user should immediately understand where it stopped and what the failure means for already completed work.
+
+## Requirements
+
+Report the failed processing unit, what work remains valid and preserved, and where a resumed execution should continue.
+
+## Example
+
+Report:
+
+``` text
+---
+
+PIPELINE FAILED
+
+
+Failure
+  Stage:              Document processing
+  Processing unit:    Document 47 of 100
+  Error:              Invalid model response
+
+Preserved work
+  Completed units:    Documents 1–46
+  Outputs preserved:  Yes
+  Reprocessing needed: No
+
+Recovery
+  Resume at:          Document 47
+  Previous results:   Will be reused
+
+
+EXECUTION STOPPED
+Documents 1–46 remain valid.
+Restart will resume at document 47.
+
+---
+```
+
+# Completion Reporting
+
+## Description
+
+Regardless of whether a script involves LLMs, successful termination should be explicit. A script should not leave the user guessing whether it finished or where its outputs went.
+
+## Requirements
+
+At successful termination, report completion and identify any externally visible files or other artifacts that were created, updated, or otherwise produced.
+
+## Example
+
+Report:
+
+``` text
+---
+
+PROCESSING COMPLETE
+
+
+Outputs
+  Created:            outputs/results.csv
+
+
+COMPLETED SUCCESSFULLY
+1 output artifact was written.
+
+---
+```

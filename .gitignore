@@ -1,0 +1,19 @@
+# Quarto output
+_site/
+
+# Local backups / working artifacts
+old/
+zipmymess.zip
+
+# R / RStudio
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Quarto local cache
+.quarto/
