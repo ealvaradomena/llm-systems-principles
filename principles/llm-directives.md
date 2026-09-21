@@ -113,3 +113,46 @@ At successful termination, explicitly report completion and identify
 externally visible files or other artifacts that were created, updated,
 or otherwise produced. Do not leave successful completion or output
 locations implicit.
+
+# Explicit Function Provenance
+
+Make function provenance visible at the call site. In R, call functions
+from non-base packages as `package::function()`. In Python, prefer
+module-qualified calls such as `pandas.read_csv()` or `numpy.mean()` for
+external packages rather than importing package functions directly into
+the local namespace. Use `UPPER_SNAKE_CASE()` for functions created
+within the project working directory. Apply this convention when
+creating functions and when renaming functions as part of otherwise
+authorized work; do not rename existing project-defined functions solely
+to enforce it unless a project-wide naming migration is explicitly
+authorized. Do not rename external-package functions to satisfy the
+project-defined naming convention.
+
+# Standardized Script Presentation
+
+After substantive implementation and validation, apply
+`https://github.com/ealvaradomena/my-prompts/blob/main/prompts/pretty-r-scripts.md`
+to R scripts and
+`https://github.com/ealvaradomena/my-prompts/blob/main/prompts/pretty-python-scripts.md`
+to Python scripts. Treat these as authoritative documentation and
+presentation specifications, not as authorization to change
+computational behavior. Preserve logic, names, paths, inputs, outputs,
+APIs, side effects, and execution semantics unless separately instructed
+otherwise, and revalidate behavior after the formatting pass.
+
+# Explicit Script I/O Contracts
+
+Inspect the project structure and relevant source files across the
+working directory as needed to determine each script’s runtime
+filesystem dependencies and products. Do not recursively inspect
+generated outputs, dependency environments, version-control internals,
+caches, archives, or unrelated files unless necessary to resolve the
+script’s I/O behavior. At the top of every applicable script, add
+explicit `INPUT` and `OUTPUT` sections. Under `INPUT`, list every
+working-directory file the script reads, loads, sources, imports as
+project code, or otherwise depends on at runtime. Under `OUTPUT`, list
+every working-directory file the script creates or overwrites. Use paths
+relative to the working-directory root. Resolve constructed paths when
+reliable; for genuinely dynamic paths, document the narrowest accurate
+relative pattern or location rather than inventing a filename. Keep the
+contract synchronized with filesystem behavior.

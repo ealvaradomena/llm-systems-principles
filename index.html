@@ -790,6 +790,156 @@ At successful termination, explicitly report completion and identify externally 
 </p>
 </div>
 </section>
+<section class="principle-row" id="explicit-function-provenance">
+<div class="principle-label">
+<span class="principle-number">16</span>
+<h2>
+Explicit Function Provenance
+</h2>
+<button class="select-principle" type="button" data-principle="explicit-function-provenance" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+Function calls should make their provenance immediately legible. Language-native functions, functions supplied by external dependencies, and functions defined by the project should be visually distinguishable at the call site.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+In R, call functions from non-base packages with explicit namespace qualification using <code>package::function()</code>. In Python, prefer module-qualified calls such as <code>pandas.read_csv()</code> or <code>numpy.mean()</code> for external packages rather than importing package functions directly into the local namespace. Functions created within the project working directory must use <code>UPPER_SNAKE_CASE()</code> consistently wherever they are defined or called. Apply this convention when creating functions and when renaming functions as part of otherwise authorized work; do not rename existing project-defined functions solely to enforce the convention unless a project-wide naming migration is explicitly authorized. Do not rename functions supplied by external packages to satisfy the project-defined naming convention.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+In R:
+</p>
+<pre><code>mean(x)
+dplyr::filter(data, year &gt;= 2020)
+jsonlite::fromJSON("config.json")
+VALIDATE_OUTPUT(result)
+WRITE_ARTIFACT(result, path)</code></pre>
+<p>
+In Python:
+</p>
+<pre><code>import pandas
+import numpy
+
+pandas.read_csv(path)
+numpy.mean(values)
+VALIDATE_OUTPUT(result)
+WRITE_ARTIFACT(result, path)</code></pre>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Make function provenance visible at the call site. In R, call functions from non-base packages as package::function() . In Python, prefer module-qualified calls such as pandas.read_csv() or numpy.mean() for external packages rather than importing package functions directly into the local namespace. Use UPPER_SNAKE_CASE() for functions created within the project working directory. Apply this convention when creating functions and when renaming functions as part of otherwise authorized work; do not rename existing project-defined functions solely to enforce it unless a project-wide naming migration is explicitly authorized. Do not rename external-package functions to satisfy the project-defined naming convention. " aria-label="Copy Explicit Function Provenance directive">Copy</button>
+</div>
+<p>
+Make function provenance visible at the call site. In R, call functions from non-base packages as <code>package::function()</code>. In Python, prefer module-qualified calls such as <code>pandas.read_csv()</code> or <code>numpy.mean()</code> for external packages rather than importing package functions directly into the local namespace. Use <code>UPPER_SNAKE_CASE()</code> for functions created within the project working directory. Apply this convention when creating functions and when renaming functions as part of otherwise authorized work; do not rename existing project-defined functions solely to enforce it unless a project-wide naming migration is explicitly authorized. Do not rename external-package functions to satisfy the project-defined naming convention.
+</p>
+</div>
+</section>
+<section class="principle-row" id="standardized-script-presentation">
+<div class="principle-label">
+<span class="principle-number">17</span>
+<h2>
+Standardized Script Presentation
+</h2>
+<button class="select-principle" type="button" data-principle="standardized-script-presentation" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+R and Python scripts should follow a consistent documentation and formatting standard without changing their computational behavior. The project’s Pretty Scripts specifications provide the authoritative presentation conventions for these languages.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+After substantive implementation and validation, format R scripts according to <code>https://github.com/ealvaradomena/my-prompts/blob/main/prompts/pretty-r-scripts.md</code> and Python scripts according to <code>https://github.com/ealvaradomena/my-prompts/blob/main/prompts/pretty-python-scripts.md</code>. Treat these specifications as documentation and presentation passes, not as authorization to refactor behavior. Preserve logic, names, paths, inputs, outputs, APIs, side effects, and execution semantics unless a separate instruction explicitly authorizes substantive changes. Revalidate behavior after applying the formatting pass.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+A workflow first implements and validates an R script, then applies the Pretty R Scripts specification, and finally reruns the relevant validation to confirm that only documentation and presentation changed.
+</p>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" After substantive implementation and validation, apply https://github.com/ealvaradomena/my-prompts/blob/main/prompts/pretty-r-scripts.md to R scripts and https://github.com/ealvaradomena/my-prompts/blob/main/prompts/pretty-python-scripts.md to Python scripts. Treat these as authoritative documentation and presentation specifications, not as authorization to change computational behavior. Preserve logic, names, paths, inputs, outputs, APIs, side effects, and execution semantics unless separately instructed otherwise, and revalidate behavior after the formatting pass. " aria-label="Copy Standardized Script Presentation directive">Copy</button>
+</div>
+<p>
+After substantive implementation and validation, apply <code>https://github.com/ealvaradomena/my-prompts/blob/main/prompts/pretty-r-scripts.md</code> to R scripts and <code>https://github.com/ealvaradomena/my-prompts/blob/main/prompts/pretty-python-scripts.md</code> to Python scripts. Treat these as authoritative documentation and presentation specifications, not as authorization to change computational behavior. Preserve logic, names, paths, inputs, outputs, APIs, side effects, and execution semantics unless separately instructed otherwise, and revalidate behavior after the formatting pass.
+</p>
+</div>
+</section>
+<section class="principle-row" id="explicit-script-i-o-contracts">
+<div class="principle-label">
+<span class="principle-number">18</span>
+<h2>
+Explicit Script I/O Contracts
+</h2>
+<button class="select-principle" type="button" data-principle="explicit-script-i-o-contracts" aria-pressed="false">
+Add
+</button>
+</div>
+<div class="human-cell">
+<div class="section-label">
+Description
+</div>
+<p>
+Each script should state its filesystem dependencies and products at the top of the file so that its role in the project pipeline can be understood without reverse-engineering the script body.
+</p>
+<div class="section-label">
+Requirements
+</div>
+<p>
+Inspect the project structure and relevant source files across the working directory as needed to determine each script’s runtime filesystem dependencies and products. Do not recursively inspect generated outputs, dependency environments, version-control internals, caches, archives, or unrelated files unless they are necessary to resolve the script’s I/O behavior. At the top of every applicable script, include explicit <code>INPUT</code> and <code>OUTPUT</code> sections. Under <code>INPUT</code>, list every file within the working directory that the script reads, loads, sources, imports as project code, or otherwise depends on at runtime. Under <code>OUTPUT</code>, list every file within the working directory that the script creates or overwrites. Express each entry as a path relative to the working-directory root. Resolve constructed paths when they can be determined reliably; when a path is genuinely dynamic, document the narrowest accurate relative path pattern or location rather than inventing a filename. Keep these sections synchronized whenever filesystem behavior changes.
+</p>
+<div class="section-label">
+Example
+</div>
+<p>
+An R script might begin with:
+</p>
+<pre><code># INPUT
+# - data/raw/articles.csv
+# - config/model.yml
+# - R/helpers.R
+#
+# OUTPUT
+# - data/processed/articles_clean.rds
+# - logs/cleaning-summary.json</code></pre>
+<p>
+A Python script might begin with:
+</p>
+<pre><code># INPUT
+# - data/processed/articles_clean.rds
+# - config/extraction.json
+#
+# OUTPUT
+# - results/extractions.jsonl
+# - logs/extraction-summary.json</code></pre>
+</div>
+<div class="llm-cell">
+<div class="directive-topline">
+<span class="section-label">Directive</span><button class="copy-one" type="button" data-copy=" Inspect the project structure and relevant source files across the working directory as needed to determine each script's runtime filesystem dependencies and products. Do not recursively inspect generated outputs, dependency environments, version-control internals, caches, archives, or unrelated files unless necessary to resolve the script's I/O behavior. At the top of every applicable script, add explicit INPUT and OUTPUT sections. Under INPUT , list every working-directory file the script reads, loads, sources, imports as project code, or otherwise depends on at runtime. Under OUTPUT , list every working-directory file the script creates or overwrites. Use paths relative to the working-directory root. Resolve constructed paths when reliable; for genuinely dynamic paths, document the narrowest accurate relative pattern or location rather than inventing a filename. Keep the contract synchronized with filesystem behavior. " aria-label="Copy Explicit Script I/O Contracts directive">Copy</button>
+</div>
+<p>
+Inspect the project structure and relevant source files across the working directory as needed to determine each script’s runtime filesystem dependencies and products. Do not recursively inspect generated outputs, dependency environments, version-control internals, caches, archives, or unrelated files unless necessary to resolve the script’s I/O behavior. At the top of every applicable script, add explicit <code>INPUT</code> and <code>OUTPUT</code> sections. Under <code>INPUT</code>, list every working-directory file the script reads, loads, sources, imports as project code, or otherwise depends on at runtime. Under <code>OUTPUT</code>, list every working-directory file the script creates or overwrites. Use paths relative to the working-directory root. Resolve constructed paths when reliable; for genuinely dynamic paths, document the narrowest accurate relative pattern or location rather than inventing a filename. Keep the contract synchronized with filesystem behavior.
+</p>
+</div>
+</section>
 </div>
 <aside class="prompt-builder" id="prompt-builder" aria-label="LLM directive selection">
 <div class="prompt-builder-heading">
@@ -858,6 +1008,15 @@ Clear
 </div>
 <div class="principle-choice" data-principle="completion-reporting">
 <input class="principle-select" type="checkbox" value="completion-reporting" aria-label="Include Completion Reporting"><span class="choice-number">15</span><a class="principle-jump" href="#completion-reporting">Completion Reporting</a>
+</div>
+<div class="principle-choice" data-principle="explicit-function-provenance">
+<input class="principle-select" type="checkbox" value="explicit-function-provenance" aria-label="Include Explicit Function Provenance"><span class="choice-number">16</span><a class="principle-jump" href="#explicit-function-provenance">Explicit Function Provenance</a>
+</div>
+<div class="principle-choice" data-principle="standardized-script-presentation">
+<input class="principle-select" type="checkbox" value="standardized-script-presentation" aria-label="Include Standardized Script Presentation"><span class="choice-number">17</span><a class="principle-jump" href="#standardized-script-presentation">Standardized Script Presentation</a>
+</div>
+<div class="principle-choice" data-principle="explicit-script-i-o-contracts">
+<input class="principle-select" type="checkbox" value="explicit-script-i-o-contracts" aria-label="Include Explicit Script I/O Contracts"><span class="choice-number">18</span><a class="principle-jump" href="#explicit-script-i-o-contracts">Explicit Script I/O Contracts</a>
 </div>
 </div>
 <button type="button" class="copy-selected" id="copy-selected" disabled="">
@@ -936,7 +1095,7 @@ Copy selected directives
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp('/' + window.location.host + '/');
+        var filterRegex = new RegExp("https:\/\/ealvaradomena\.github\.io\/llm-systems-principles\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
