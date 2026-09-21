@@ -17,3 +17,6 @@ Thumbs.db
 
 # Quarto local cache
 .quarto/
+
+/.quarto/
+**/*.quarto_ipynb

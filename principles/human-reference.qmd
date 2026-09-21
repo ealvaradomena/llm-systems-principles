@@ -337,3 +337,88 @@ COMPLETED SUCCESSFULLY
 
 ---
 ```
+
+# Explicit Function Provenance
+
+## Description
+
+Function calls should make their provenance immediately legible. Language-native functions, functions supplied by external dependencies, and functions defined by the project should be visually distinguishable at the call site.
+
+## Requirements
+
+In R, call functions from non-base packages with explicit namespace qualification using `package::function()`. Functions defined anywhere within the project working directory must use `UPPER_SNAKE_CASE()` consistently wherever they are defined or called. In Python, prefer module-qualified calls such as `pandas.read_csv()` or `numpy.mean()` for external packages rather than importing package functions directly into the local namespace. Project-defined Python functions must likewise use `UPPER_SNAKE_CASE()`. Do not rename functions supplied by external packages to satisfy the project-defined naming convention.
+
+## Example
+
+In R:
+
+``` r
+mean(x)
+dplyr::filter(data, year >= 2020)
+jsonlite::fromJSON("config.json")
+VALIDATE_OUTPUT(result)
+WRITE_ARTIFACT(result, path)
+```
+
+In Python:
+
+``` python
+import pandas
+import numpy
+
+pandas.read_csv(path)
+numpy.mean(values)
+VALIDATE_OUTPUT(result)
+WRITE_ARTIFACT(result, path)
+```
+
+# Standardized Script Presentation
+
+## Description
+
+R and Python scripts should follow a consistent documentation and formatting standard without changing their computational behavior. The project's Pretty Scripts specifications provide the authoritative presentation conventions for these languages.
+
+## Requirements
+
+After substantive implementation and validation, format R scripts according to `https://github.com/ealvaradomena/my-prompts/blob/main/prompts/pretty-r-scripts.md` and Python scripts according to `https://github.com/ealvaradomena/my-prompts/blob/main/prompts/pretty-python-scripts.md`. Treat these specifications as documentation and presentation passes, not as authorization to refactor behavior. Preserve logic, names, paths, inputs, outputs, APIs, side effects, and execution semantics unless a separate instruction explicitly authorizes substantive changes. Revalidate behavior after applying the formatting pass.
+
+## Example
+
+A workflow first implements and validates an R script, then applies the Pretty R Scripts specification, and finally reruns the relevant validation to confirm that only documentation and presentation changed.
+
+# Explicit Script I/O Contracts
+
+## Description
+
+Each script should state its filesystem dependencies and products at the top of the file so that its role in the project pipeline can be understood without reverse-engineering the script body.
+
+## Requirements
+
+Inspect the entire working directory, not only the script in isolation, before documenting its I/O contract. At the top of every applicable script, include explicit `INPUT` and `OUTPUT` sections. Under `INPUT`, list every file within the working directory that the script reads, loads, sources, imports as project code, or otherwise depends on at runtime. Under `OUTPUT`, list every file within the working directory that the script creates or overwrites. Express each entry as a path relative to the working-directory root. Resolve constructed paths when they can be determined reliably; when a path is genuinely dynamic, document the narrowest accurate relative path pattern or location rather than inventing a filename. Keep these sections synchronized whenever filesystem behavior changes.
+
+## Example
+
+An R script might begin with:
+
+``` r
+# INPUT
+# - data/raw/articles.csv
+# - config/model.yml
+# - R/helpers.R
+#
+# OUTPUT
+# - data/processed/articles_clean.rds
+# - logs/cleaning-summary.json
+```
+
+A Python script might begin with:
+
+``` python
+# INPUT
+# - data/processed/articles_clean.rds
+# - config/extraction.json
+#
+# OUTPUT
+# - results/extractions.jsonl
+# - logs/extraction-summary.json
+```

@@ -64,9 +64,24 @@ markdown_fragment <- function(lines) {
   paste(out, collapse = "\n")
 }
 
+markdown_heading_indices <- function(lines, level) {
+  fence <- grepl("^```", trimws(lines))
+  in_fence <- FALSE
+  keep <- logical(length(lines))
+  pattern <- paste0("^", strrep("#", level), " [^#]")
+  for (i in seq_along(lines)) {
+    if (fence[i]) {
+      in_fence <- !in_fence
+      next
+    }
+    if (!in_fence && grepl(pattern, lines[i])) keep[i] <- TRUE
+  }
+  which(keep)
+}
+
 parse_human <- function(path) {
   lines <- strip_yaml(readLines(path, warn = FALSE, encoding = "UTF-8"))
-  h1 <- grep("^# [^#]", lines)
+  h1 <- markdown_heading_indices(lines, 1)
   if (!length(h1)) stop("No principles found in human reference.")
   result <- vector("list", length(h1))
   for (j in seq_along(h1)) {
@@ -74,7 +89,7 @@ parse_human <- function(path) {
     end <- if (j < length(h1)) h1[j + 1] - 1 else length(lines)
     block <- lines[start:end]
     title <- sub("^#\\s+", "", block[1])
-    h2 <- grep("^##\\s+", block)
+    h2 <- markdown_heading_indices(block, 2)
     sections <- list()
     for (k in seq_along(h2)) {
       s <- h2[k]
@@ -94,7 +109,7 @@ parse_human <- function(path) {
 
 parse_llm <- function(path) {
   lines <- strip_yaml(readLines(path, warn = FALSE, encoding = "UTF-8"))
-  h1 <- grep("^# [^#]", lines)
+  h1 <- markdown_heading_indices(lines, 1)
   if (!length(h1)) stop("No principles found in LLM directives.")
   result <- vector("list", length(h1))
   for (j in seq_along(h1)) {

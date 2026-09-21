@@ -2,7 +2,7 @@
 
 A lightweight Quarto project that presents the same set of LLM-system engineering principles for two audiences:
 
-- `principles/human-reference.qmd` — the user-facing reference document. This is copied unchanged from the supplied source file.
+- `principles/human-reference.qmd` — the user-facing explanatory reference document.
 - `principles/llm-directives.qmd` — concise directives intended to be passed to ChatGPT, Codex, or another LLM when designing or reviewing an LLM-assisted system.
 
 The website is generated programmatically from those two source documents. `R/render-principles.R` parses the principle headings and human-facing `Description`, `Requirements`, and `Example` sections, joins them by principle name/order to the LLM directives, and emits the comparison table used by `index.qmd`.
