@@ -21,15 +21,38 @@ strip_yaml <- function(lines) {
   lines
 }
 
+fence_marker <- function(line) {
+  text <- trimws(line)
+  if (!grepl("^(`{3,}|~{3,})", text, perl = TRUE)) return(NULL)
+  marker <- sub("^((`{3,}|~{3,})).*$", "\\1", text, perl = TRUE)
+  list(char = substr(marker, 1, 1), length = nchar(marker))
+}
+
+is_closing_fence <- function(line, marker) {
+  text <- trimws(line)
+  if (!nzchar(text)) return(FALSE)
+  pattern <- paste0("^", marker$char, "{", marker$length, ",}\\s*$")
+  grepl(pattern, text, perl = TRUE)
+}
+
 parse_fenced_block <- function(lines, i) {
-  fence <- trimws(lines[i])
-  end <- i + which(trimws(lines[(i + 1):length(lines)]) == "```")[1]
+  marker <- fence_marker(lines[i])
+  if (is.null(marker)) stop("Expected fenced code block.")
+  end <- NA_integer_
+  if (i < length(lines)) {
+    for (j in seq.int(i + 1L, length(lines))) {
+      if (is_closing_fence(lines[j], marker)) {
+        end <- j
+        break
+      }
+    }
+  }
   if (is.na(end)) stop("Unclosed fenced code block.")
-  body <- lines[(i + 1):(end - 1)]
+  body <- if (end > i + 1L) lines[(i + 1L):(end - 1L)] else character()
   body <- body[!(trimws(body) == "---")]
   while (length(body) && !nzchar(trimws(body[1]))) body <- body[-1]
   while (length(body) && !nzchar(trimws(body[length(body)]))) body <- body[-length(body)]
-  list(html = paste0("<pre><code>", html_escape(paste(body, collapse = "\n")), "</code></pre>"), next_i = end + 1)
+  list(html = paste0("<pre><code>", html_escape(paste(body, collapse = "\n")), "</code></pre>"), next_i = end + 1L)
 }
 
 markdown_fragment <- function(lines) {
@@ -45,7 +68,7 @@ markdown_fragment <- function(lines) {
   i <- 1
   while (i <= length(lines)) {
     line <- lines[i]
-    if (grepl("^```", trimws(line))) {
+    if (!is.null(fence_marker(line))) {
       flush_paragraph()
       block <- parse_fenced_block(lines, i)
       out <- c(out, block$html)
@@ -65,16 +88,23 @@ markdown_fragment <- function(lines) {
 }
 
 markdown_heading_indices <- function(lines, level) {
-  fence <- grepl("^```", trimws(lines))
   in_fence <- FALSE
+  active_marker <- NULL
   keep <- logical(length(lines))
   pattern <- paste0("^", strrep("#", level), " [^#]")
   for (i in seq_along(lines)) {
-    if (fence[i]) {
-      in_fence <- !in_fence
-      next
+    if (!in_fence) {
+      marker <- fence_marker(lines[i])
+      if (!is.null(marker)) {
+        in_fence <- TRUE
+        active_marker <- marker
+        next
+      }
+      if (grepl(pattern, lines[i])) keep[i] <- TRUE
+    } else if (is_closing_fence(lines[i], active_marker)) {
+      in_fence <- FALSE
+      active_marker <- NULL
     }
-    if (!in_fence && grepl(pattern, lines[i])) keep[i] <- TRUE
   }
   which(keep)
 }

@@ -346,7 +346,7 @@ Function calls should make their provenance immediately legible. Language-native
 
 ## Requirements
 
-In R, call functions from non-base packages with explicit namespace qualification using `package::function()`. Functions defined anywhere within the project working directory must use `UPPER_SNAKE_CASE()` consistently wherever they are defined or called. In Python, prefer module-qualified calls such as `pandas.read_csv()` or `numpy.mean()` for external packages rather than importing package functions directly into the local namespace. Project-defined Python functions must likewise use `UPPER_SNAKE_CASE()`. Do not rename functions supplied by external packages to satisfy the project-defined naming convention.
+In R, call functions from non-base packages with explicit namespace qualification using `package::function()`. In Python, prefer module-qualified calls such as `pandas.read_csv()` or `numpy.mean()` for external packages rather than importing package functions directly into the local namespace. Functions created within the project working directory must use `UPPER_SNAKE_CASE()` consistently wherever they are defined or called. Apply this convention when creating functions and when renaming functions as part of otherwise authorized work; do not rename existing project-defined functions solely to enforce the convention unless a project-wide naming migration is explicitly authorized. Do not rename functions supplied by external packages to satisfy the project-defined naming convention.
 
 ## Example
 
@@ -394,7 +394,7 @@ Each script should state its filesystem dependencies and products at the top of 
 
 ## Requirements
 
-Inspect the entire working directory, not only the script in isolation, before documenting its I/O contract. At the top of every applicable script, include explicit `INPUT` and `OUTPUT` sections. Under `INPUT`, list every file within the working directory that the script reads, loads, sources, imports as project code, or otherwise depends on at runtime. Under `OUTPUT`, list every file within the working directory that the script creates or overwrites. Express each entry as a path relative to the working-directory root. Resolve constructed paths when they can be determined reliably; when a path is genuinely dynamic, document the narrowest accurate relative path pattern or location rather than inventing a filename. Keep these sections synchronized whenever filesystem behavior changes.
+Inspect the project structure and relevant source files across the working directory as needed to determine each script's runtime filesystem dependencies and products. Do not recursively inspect generated outputs, dependency environments, version-control internals, caches, archives, or unrelated files unless they are necessary to resolve the script's I/O behavior. At the top of every applicable script, include explicit `INPUT` and `OUTPUT` sections. Under `INPUT`, list every file within the working directory that the script reads, loads, sources, imports as project code, or otherwise depends on at runtime. Under `OUTPUT`, list every file within the working directory that the script creates or overwrites. Express each entry as a path relative to the working-directory root. Resolve constructed paths when they can be determined reliably; when a path is genuinely dynamic, document the narrowest accurate relative path pattern or location rather than inventing a filename. Keep these sections synchronized whenever filesystem behavior changes.
 
 ## Example
 
